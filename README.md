@@ -11,3 +11,8 @@ That's is why I make another parser here.
 
 I have implemented only NMEA messages I need.
 Other messages might be added in the future.
+
+## REFERENCES
+
+- https://www.gpsinformation.org/dale/nmea.htm
+- http://freenmea.net/docs
