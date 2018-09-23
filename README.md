@@ -9,6 +9,20 @@ That's is why I make another parser here.
 
 ## USAGE
 
+    usage: nmea-stat.py [-h] [-g] [-c] [-s] [-b BREAK_WORD] [-f INPUT_FILE]
+                        [--min-snr MIN_SNR] [-v] [-d]
+    
+    optional arguments:
+      -h, --help         show this help message and exit
+      -g                 enable to show the geometric parameters.
+      -c                 enable to show the condition of satelliates.
+      -s                 enable to show a statistics periodically. see -b option.
+      -b BREAK_WORD      specify a word to break the stream input.
+      -f INPUT_FILE      specify the file name of NMEA messages.
+      --min-snr MIN_SNR  specify the minimum SNR for an external application.
+      -v                 enable verbose mode.
+      -d                 enable debug mode.
+
 - one time parser.
 
 You can see the NMEA data in JSON.
