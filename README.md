@@ -9,6 +9,10 @@ That's is why I make another parser here.
 
 ## USAGE
 
+It doesn't show any error messages.
+If you see something strange output, you can add -v option,
+then you can see what happens during parsing.
+
     usage: nmea-stat.py [-h] [-g] [-c] [-s] [-b BREAK_WORD] [-f INPUT_FILE]
                         [--min-snr MIN_SNR] [-v] [-d]
     
