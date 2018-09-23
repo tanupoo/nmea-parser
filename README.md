@@ -27,7 +27,7 @@ then you can see what happens during parsing.
       -v                 enable verbose mode.
       -d                 enable debug mode.
 
-- one time parser.
+### One time mode.
 
 You can see the NMEA data in JSON.
 
@@ -41,10 +41,10 @@ With the -c option, you can see the condition of the satellites in the device's 
 
 With the -g option, you can see the geometry of the GPS device.
 
-- streaming mode.
+### Streaming mode.
 
 You can see the result continuously if you add the -s option.
-Both -c and -g options can be used.
+Either -c and -g options can be used.
 
     % nmea-stat.py -s -c -f /dev/tty.BT-GPS-32D4BF-BT-GPSCOM
 
