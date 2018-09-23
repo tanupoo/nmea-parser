@@ -80,7 +80,7 @@ class nmea_parser():
             sign = 1
         return sign * float(src[:i]) + round(float(src[i:])/60,7)
 
-    def get_keys(self, msg):
+    def get_keys(self, msg, nitems=0):
         '''
         msg
             "   $GPGSV,2,1,,,22,45*75   "
@@ -90,8 +90,10 @@ class nmea_parser():
         Now, it supports a string, of which check sum is not correct,
         and which "*" is missed.
         '''
-        item = msg.strip().split("*")[0][1:]
+        item = msg.strip().split("*")[0][1:].split(",")
         talker_id = item[0][:2]
+        if nitems and len(item) < nitems:
+            item.append([""]*(nitems-len(item)))
         return talker_id, item
 
     def parse_GSV(self, msg):
@@ -141,7 +143,7 @@ class nmea_parser():
         e.g.
         $GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47
         '''
-        talker_id, item = self.get_keys(msg)
+        talker_id, item = self.get_keys(msg, nitems=15)
         t = self.talkers.setdefault(talker_id,{})
         sv = t.setdefault("GGA", {})
         sv["sentence"] = msg
