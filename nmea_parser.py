@@ -118,7 +118,7 @@ class nmea_parser():
         # it should not be an error
         t = self.talkers.setdefault(talker_id,{})
         sv = t.setdefault("GSV", { "n_talkers":item[3],
-                                  "sentences":[0]*int(item[1]),
+                                  "sentences":['']*int(item[1]),
                                   "talkers":[] })
         sv["sentences"][int(item[2])-1] = msg
         sv["talkers"].extend(v)
