@@ -227,7 +227,7 @@ class nmea_parser():
         sv["longitude"] = self.conv_dmm_deg(item[5],item[6])
         sv["speed"] = float(item[7])
         sv["angle"] = item[8]
-        sv["date"] = "20{}-{}-{}".format(item[9][:2],item[9][2:4],item[9][4:])
+        sv["date"] = "20{}-{}-{}".format(item[9][4:],item[9][2:4],item[9][:2])
         sv["magnetic"] = "{} {}".format(item[10], item[11])
 
     def parse_GLL(self, msg):
