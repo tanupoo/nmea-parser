@@ -37,9 +37,38 @@ or
 
     % cat nmea.txt | nmea-stat.py
 
+You can specify the device file as the file name.  See the streaming mode.
+
 With the -c option, you can see the condition of the satellites in the device's sight.
 
-With the -g option, you can see the geometry of the GPS device.
+    % nmea-stat.py --ignore-cksum --min-snr=35 -c
+    ## 2018-09-24 07:55:32.294942
+      Satellites in view: 10
+      Satellites in tracking: 5
+      Satellites in good signal: 3
+
+The time stamp of each header is the time when you parse the data,
+If you want to know the date and time when the data was taken,
+you should add the -g option to see the geometric data.
+
+With the -g option, you can see the geometric data of the GPS device.
+
+    % nmea-stat.py --ignore-cksum -g
+    ## 2018-09-24 07:57:13.800630
+      Statis: A
+      UTC: 2003-04-22 00:14:30.003
+      Latitude: 39.1231417
+      Longitude: -120.9587217
+      Altitude: 00545.5 M
+      Height of geoid: -26.0 M
+      Speed: 0.0
+      Angle: 175.3
+      Quality: GPS fix
+      Mode: 3D fix
+      Tracked: 5
+      PDOP: Good (04.5)
+      HDOP: Good (02.1)
+      VDOP: Good (04.0)
 
 ### Streaming mode.
 
