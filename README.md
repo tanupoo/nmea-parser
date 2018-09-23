@@ -42,7 +42,7 @@ With the -g option, you can see the geometry of the GPS device.
 You can see the result continuously if you add the -s option.
 Both -c and -g options can be used.
 
-    % cat /dev/tty.BT-GPS-32D4BF-BT-GPSCOM | nmea-stat.py -s -c
+    % nmea-stat.py -s -c -f /dev/tty.BT-GPS-32D4BF-BT-GPSCOM
 
 ## BUGS
 
