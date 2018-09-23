@@ -3,6 +3,9 @@
 def verify_cksum(src):
     if len(src) == 0 or src[0] != "$":
         return False
+    if len(src.split("*")) == 1:
+        # there is no "*".  avoiding to through raise by index("*")
+        return False
     base, cksum = src[1:].split("*")
     if len(cksum) == 0:
         return False
@@ -49,9 +52,11 @@ class nmea_parser():
         if line[0] != "$":
             self.__error_msg = "not NMEA data"
             return False
+        '''
         if verify_cksum(line) == False:
             self.__error_msg = "check sum error"
             return False
+        '''
         f = self.__func.get(line[3:6])
         if f:
             if f(line) == False:
@@ -76,7 +81,16 @@ class nmea_parser():
         return sign * float(src[:i]) + round(float(src[i:])/60,7)
 
     def get_keys(self, msg):
-        item = msg[1+msg.index("$"):msg.index("*")].split(",")
+        '''
+        msg
+            "   $GPGSV,2,1,,,22,45*75   "
+        is gonna be 
+            "GPGSV,2,1,,,22,45"
+        then, it is splitted.
+        Now, it supports a string, of which check sum is not correct,
+        and which "*" is missed.
+        '''
+        item = msg.strip().split("*")[0][1:]
         talker_id = item[0][:2]
         return talker_id, item
 
