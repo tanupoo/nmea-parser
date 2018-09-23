@@ -170,10 +170,11 @@ class nmea_parser():
         sv["sentences"][int(item[2])-1] = msg
         for i in v:
             if sv["talkers"].get(i["prn"]):
-                print("WARNING: {} exists already in GSV.".format(i["prn"]))
+                self.__error_msg = "{} exists already in GSV.".format(i["prn"])
                 return False
             sv["talkers"][i["prn"]] = i
             sv["talkers"][i["prn"]].pop("prn")
+        return True
 
     def parse_GSA(self, msg):
         '''
@@ -193,6 +194,7 @@ class nmea_parser():
         for i in item[3:15]:
             if i:
                 tracked.setdefault(i, True)
+        return True
 
     def parse_GGA(self, msg):
         '''
@@ -213,6 +215,7 @@ class nmea_parser():
         sv["height"] = "{} {}".format(item[11], item[12])
         sv["dgps_update"] = item[13]
         sv["dgps_id"] = item[14]
+        return True
 
     def parse_RMC(self, msg):
         '''
@@ -231,6 +234,7 @@ class nmea_parser():
         sv["angle"] = item[8]
         sv["date"] = "20{}-{}-{}".format(item[9][4:],item[9][2:4],item[9][:2])
         sv["magnetic"] = "{} {}".format(item[10], item[11])
+        return True
 
     def parse_GLL(self, msg):
         '''
@@ -245,6 +249,7 @@ class nmea_parser():
         sv["longitude"] = self.conv_dmm_deg(item[3],item[4])
         sv["utc"] = "{}:{}:{}".format(item[5][:2],item[5][2:4],item[5][4:])
         sv["status"] = item[6]
+        return True
 
     def parse_VTG(self, msg):
         '''
@@ -260,6 +265,7 @@ class nmea_parser():
         sv["magnetic_track"] = "{}".format(item[3])
         sv["ground_speed_knots"] = "{}".format(item[5])
         sv["ground_speed_kmph"] = "{}".format(item[7])
+        return True
 
     def parse_ZDA(self, msg):
         '''
@@ -273,6 +279,7 @@ class nmea_parser():
         sv["utc"] = "{}:{}:{}".format(item[1][:2],item[1][2:4],item[1][4:])
         sv["date"] = "{}-{}-{}".format(item[4],item[3],item[2])
         sv["tz"] = "{}:{}".format(item[5],item[6])
+        return True
 
     def eval(self, min_snr=None):
         '''
