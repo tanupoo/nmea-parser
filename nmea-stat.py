@@ -98,9 +98,7 @@ def main_loop(fd):
         # it doesn't reach here.
     else:
         # non stream mode
-        data = fd.read()
-
-        for line in data.split("\n"):
+        for line in fd:
             line_no += 1
             if nmea.append(line) == False:
                 if opt.verbose:
