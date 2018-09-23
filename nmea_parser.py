@@ -242,6 +242,7 @@ class nmea_parser():
         sv["latitude"] = self.conv_dmm_deg(item[1],item[2])
         sv["longitude"] = self.conv_dmm_deg(item[3],item[4])
         sv["utc"] = "{}:{}:{}".format(item[5][:2],item[5][2:4],item[5][4:])
+        sv["status"] = item[6]
 
     def parse_VTG(self, msg):
         '''
@@ -326,7 +327,7 @@ class nmea_parser():
             self.__error_msg = "GSA doesn't exists."
             return None
         self.geometry["status"] = rmc["status"]
-        self.geometry["date"] = "{} {}".format(rmc["date"], rmc["utc"])
+        self.geometry["datetime"] = "{} {}".format(rmc["date"], rmc["utc"])
         self.geometry["latitude"] = rmc["latitude"]
         self.geometry["longitude"] = rmc["longitude"]
         self.geometry["altitude"] = gga["altitude"]

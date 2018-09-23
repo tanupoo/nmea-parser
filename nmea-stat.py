@@ -42,7 +42,7 @@ def print_cond(result):
 def print_geom(result):
     print("## {}".format(datetime.now()))
     print("  Statis: {}".format(result["status"]))
-    print("  Time(UTC): {}".format(result["date"]))
+    print("  UTC: {}".format(result["datetime"]))
     print("  Latitude: {}".format(result["latitude"]))
     print("  Longitude: {}".format(result["longitude"]))
     print("  Altitude: {}".format(result["altitude"]))
