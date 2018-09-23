@@ -31,15 +31,15 @@ class nmea_parser():
         }
 
     def __str__(self):
-        return "{}".format(self.talkers)
+        return "{}".format(self.nmea_obj)
 
     def init(self):
-        self.talkers = {}
+        self.nmea_obj = {}
         self.condition = {}
         self.__error_msg = ""
 
     def get(self, *arg):
-        return self.talkers
+        return self.nmea_obj
 
     def strerror(self):
         return self.__error_msg
@@ -114,7 +114,7 @@ class nmea_parser():
                 s["azimuth"] = item[i]
             elif i%4 == 3:
                 s["snr"] = item[i]
-        t = self.talkers.setdefault(talker_id,{})
+        t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("GSV", { "n_talkers":item[3],
                                   "sentences":['']*int(item[1]),
                                   "talkers":{} })
@@ -132,7 +132,7 @@ class nmea_parser():
         GPGSA,A,3,04,05,,09,12,,,24,,,,,2.5,1.3,2.1
         '''
         talker_id, item = self.get_keys(msg)
-        t = self.talkers.setdefault(talker_id,{})
+        t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("GSA",{})
         sv["sentence"] = msg
         sv["pdop"] = item[15]
@@ -149,7 +149,7 @@ class nmea_parser():
         $GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47
         '''
         talker_id, item = self.get_keys(msg, nitems=15)
-        t = self.talkers.setdefault(talker_id,{})
+        t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("GGA", {})
         sv["sentence"] = msg
         sv["utc"] = "{}:{}:{}".format(item[1][:2],item[1][2:4],item[1][4:])
@@ -169,7 +169,7 @@ class nmea_parser():
         $GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A
         '''
         talker_id, item = self.get_keys(msg)
-        t = self.talkers.setdefault(talker_id,{})
+        t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("RMC", {})
         sv["sentence"] = msg
         sv["utc"] = "{}:{}:{}".format(item[1][:2],item[1][2:4],item[1][4:])
@@ -187,7 +187,7 @@ class nmea_parser():
         $GPGLL,4916.45,N,12311.12,W,225444,A,*1D
         '''
         talker_id, item = self.get_keys(msg)
-        t = self.talkers.setdefault(talker_id,{})
+        t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("GLL", {})
         sv["sentence"] = msg
         sv["latitude"] = self.conv_dmm_deg(item[1],item[2])
@@ -201,7 +201,7 @@ class nmea_parser():
         XXX the order of each T,M,N,K is fixed ?
         '''
         talker_id, item = self.get_keys(msg)
-        t = self.talkers.setdefault(talker_id,{})
+        t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("VTG", {})
         sv["sentence"] = msg
         sv["true_track"] = "{}".format(item[1])
@@ -215,7 +215,7 @@ class nmea_parser():
         $GPZDA,201530.00,04,07,2002,00,00*60
         '''
         talker_id, item = self.get_keys(msg)
-        t = self.talkers.setdefault(talker_id,{})
+        t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("ZDA", {})
         sv["sentence"] = msg
         sv["utc"] = "{}:{}:{}".format(item[1][:2],item[1][2:4],item[1][4:])
@@ -230,8 +230,8 @@ class nmea_parser():
         # and get the number of talkers from n_talkers.
         talkers = {}
         n_view = 0
-        for i in self.talkers.keys():
-            gsv = self.talkers[i].get("GSV")
+        for i in self.nmea_obj.keys():
+            gsv = self.nmea_obj[i].get("GSV")
             if gsv:
                 talkers.update(gsv["talkers"])
                 n = gsv.get("n_talkers")
@@ -241,7 +241,7 @@ class nmea_parser():
         # find a GSA
         gsa = None
         for i in ["GN", "GP"]:
-            gx = self.talkers.get(i)
+            gx = self.nmea_obj.get(i)
             if gx is None:
                 continue
             gsa = gx.get("GSA")
