@@ -11,13 +11,13 @@ from nmea_parser import nmea_parser
 
 MIN_SNR=32
 
-pa = argparse.ArgumentParser(description="put a condition of GNSS.")
+pa = argparse.ArgumentParser(description="a parser of the NMEA messages.")
 pa.add_argument("-g", action="store_true", dest="show_geom",
-               help="enables to show the geometric parameters.")
+               help="enable to show the geometric parameters.")
 pa.add_argument("-c", action="store_true", dest="show_cond",
-               help="enables to show the condition of satelliates.")
+               help="enable to show the condition of satelliates.")
 pa.add_argument("-s", action="store_true", dest="stream_mode",
-               help="enables to show a statistics periodically. see -b option.")
+               help="enable to show a statistics periodically. see -b option.")
 pa.add_argument("-b", action="store", dest="break_word", default="GGA",
                help="specify a word to break the stream input.")
 pa.add_argument("-f", action="store", dest="input_file", default="-",
