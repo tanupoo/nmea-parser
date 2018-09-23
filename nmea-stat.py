@@ -25,6 +25,8 @@ pa.add_argument("-f", action="store", dest="input_file", default="-",
 pa.add_argument("--min-snr", action="store", dest="min_snr", default=MIN_SNR,
                 type=int,
                 help="specify the minimum SNR for an external application.")
+pa.add_argument("--ignore-cksum", action="store_true", dest="ignore_cksum",
+               help="specify to ignore the check sum.")
 pa.add_argument("-v", action="store_true", dest="verbose",
                help="enable verbose mode.")
 pa.add_argument("-d", action="store_true", dest="debug",
@@ -79,7 +81,7 @@ def show_result(nmea):
         print(json.dumps(nmea.get(),indent=4))
 
 def main_loop(fd):
-    nmea = nmea_parser()
+    nmea = nmea_parser(pedantic=not opt.ignore_cksum)
 
     line_no = 0
 
