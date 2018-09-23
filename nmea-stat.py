@@ -15,7 +15,8 @@ pa.add_argument("-B", action="store_true", dest="break_mode",
 pa.add_argument("-b", action="store", dest="break_word", default="GGA",
                help="specify a word to break the stream input.")
 pa.add_argument("--minimum-snr", action="store", dest="min_snr", default=32,
-               help="specify the minimum SNR for an external application.")
+                type=int,
+                help="specify the minimum SNR for an external application.")
 pa.add_argument("-v", action="store_true", dest="verbose",
                help="enable verbose mode.")
 pa.add_argument("-d", action="store_true", dest="debug",
