@@ -257,11 +257,7 @@ class nmea_parser():
                 if i != j:
                     continue
                 if min_snr is not None:
-                    snr = k.get("snr")
-                    if not snr:
-                        snr = 0
-                    else:
-                        snr = int(snr)
+                    snr = int(k.get("snr", 0))
                     if snr <= min_snr:
                         continue
                 #
