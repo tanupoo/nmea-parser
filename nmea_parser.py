@@ -16,6 +16,41 @@ def verify_cksum(src):
         res ^= ord(c)
     return hex(res&0xff)[2:] == cksum.lower()
 
+def get_str_dop(v):
+    '''
+    convert a DOP value in GGA or GSA into a string.
+    https://en.wikipedia.org/wiki/Dilution_of_precision_(navigation)#Meaning_of_DOP_Values
+    '''
+    if v > 0 and v < 1:
+        return "Ideal"
+    if v < 2:
+        return "Excellent"
+    if v < 5:
+        return "Good"
+    if v < 10:
+        return "Moderate"
+    if v < 20:
+        return "Fair"
+    return "Poor"
+
+def get_str_quality(v):
+    '''
+    convert a fix value in GGA into a string.
+    '''
+    if v == 0 or v > 8:
+        return "unknown"
+    #
+    return [ "GPS fix", "DGPS fix", "PPS fix", "Real Time",
+        "Float RTK", "estimated", "Manual", "Simulation mode" ][v-1]
+
+def get_str_mode(v):
+    '''
+    convert a mode value in GSA into a string.
+    '''
+    if v == 0 or v > 3:
+        return "unknown"
+    return [ "no fix", "2D fix", "3D fix" ][v-1]
+
 class nmea_parser():
 
     def __init__(self):
@@ -36,6 +71,7 @@ class nmea_parser():
     def init(self):
         self.nmea_obj = {}
         self.condition = {}
+        self.geometry = {}
         self.__error_msg = ""
 
     def get(self, *arg):
@@ -78,7 +114,7 @@ class nmea_parser():
             sign = 1
         return sign * float(src[:i]) + round(float(src[i:])/60,7)
 
-    def get_keys(self, msg, nitems=0):
+    def get_items(self, msg, nitems=0):
         '''
         msg
             "   $GPGSV,2,1,,,22,45*75   "
@@ -94,6 +130,17 @@ class nmea_parser():
             item.append([""]*(nitems-len(item)))
         return talker_id, item
 
+    def get_key(self, name):
+        target = None
+        for i in ["GN", "GP"]:
+            g = self.nmea_obj.get(i)
+            if g is None:
+                continue
+            target = g.get(name)
+            if target:
+                break
+        return target
+
     def parse_GSV(self, msg):
         '''
         even if some items are missed in the line,
@@ -102,7 +149,7 @@ class nmea_parser():
         e.g.
         $GPGSV,2,1,08,01,40,083,46,02,17,308,41,12,07,344,39,14,22,228,45*75
         '''
-        talker_id, item = self.get_keys(msg)
+        talker_id, item = self.get_items(msg)
         v = []
         for i in range(4,len(item)):
             if i%4 == 0:
@@ -131,7 +178,7 @@ class nmea_parser():
         e.g.
         GPGSA,A,3,04,05,,09,12,,,24,,,,,2.5,1.3,2.1
         '''
-        talker_id, item = self.get_keys(msg)
+        talker_id, item = self.get_items(msg)
         t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("GSA",{})
         sv["sentence"] = msg
@@ -150,7 +197,7 @@ class nmea_parser():
         e.g.
         $GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47
         '''
-        talker_id, item = self.get_keys(msg, nitems=15)
+        talker_id, item = self.get_items(msg, nitems=15)
         t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("GGA", {})
         sv["sentence"] = msg
@@ -170,7 +217,7 @@ class nmea_parser():
         e.g.
         $GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A
         '''
-        talker_id, item = self.get_keys(msg)
+        talker_id, item = self.get_items(msg)
         t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("RMC", {})
         sv["sentence"] = msg
@@ -188,7 +235,7 @@ class nmea_parser():
         e.g.
         $GPGLL,4916.45,N,12311.12,W,225444,A,*1D
         '''
-        talker_id, item = self.get_keys(msg)
+        talker_id, item = self.get_items(msg)
         t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("GLL", {})
         sv["sentence"] = msg
@@ -202,7 +249,7 @@ class nmea_parser():
         $GPVTG,054.7,T,034.4,M,005.5,N,010.2,K*48
         XXX the order of each T,M,N,K is fixed ?
         '''
-        talker_id, item = self.get_keys(msg)
+        talker_id, item = self.get_items(msg)
         t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("VTG", {})
         sv["sentence"] = msg
@@ -216,7 +263,7 @@ class nmea_parser():
         e.g.
         $GPZDA,201530.00,04,07,2002,00,00*60
         '''
-        talker_id, item = self.get_keys(msg)
+        talker_id, item = self.get_items(msg)
         t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("ZDA", {})
         sv["sentence"] = msg
@@ -241,15 +288,12 @@ class nmea_parser():
                     n_view += int(n)
         self.condition["n_view"] = n_view
         # find a GSA
-        gsa = None
-        for i in ["GN", "GP"]:
-            gx = self.nmea_obj.get(i)
-            if gx is None:
-                continue
-            gsa = gx.get("GSA")
-            if gsa:
-                break
-        if gsa is None or gsa.get("tracked") is None:
+        gsa = self.get_key("GSA")
+        if gsa is None:
+            self.__error_msg = "GGA doesn't exists."
+            return None
+        if gsa.get("tracked") is None:
+            self.__error_msg = "tracked in GGA doesn't exists."
             return None
         tracked = self.condition.setdefault("tracked",[])
         n_good = []
@@ -267,6 +311,39 @@ class nmea_parser():
         self.condition["n_good"] = n_good
         #
         return self.condition
+
+    def get_geom(self):
+        rmc = self.get_key("RMC")
+        if not rmc:
+            self.__error_msg = "RMC doesn't exists."
+            return None
+        gga = self.get_key("GGA")
+        if not gga:
+            self.__error_msg = "GGA doesn't exists."
+            return None
+        gsa = self.get_key("GSA")
+        if not gsa:
+            self.__error_msg = "GSA doesn't exists."
+            return None
+        self.geometry["status"] = rmc["status"]
+        self.geometry["date"] = "{} {}".format(rmc["date"], rmc["utc"])
+        self.geometry["latitude"] = rmc["latitude"]
+        self.geometry["longitude"] = rmc["longitude"]
+        self.geometry["altitude"] = gga["altitude"]
+        self.geometry["height"] = gga["height"]
+        self.geometry["speed"] = rmc["speed"]
+        self.geometry["angle"] = rmc["angle"]
+        self.geometry["quality"] = get_str_quality(int(gga["quality"]))
+        self.geometry["mode"] = get_str_mode(int(gsa["mode"]))
+        self.geometry["n_tracked"] = int(gga["n_tracked"])
+        self.geometry["pdop"] = "{} ({})".format(
+                get_str_dop(float(gsa["pdop"])),gsa["pdop"])
+        self.geometry["hdop"] = "{} ({})".format(
+                get_str_dop(float(gsa["hdop"])),gsa["hdop"])
+        self.geometry["vdop"] = "{} ({})".format(
+                get_str_dop(float(gsa["vdop"])),gsa["vdop"])
+        #
+        return self.geometry
 
 '''
 main

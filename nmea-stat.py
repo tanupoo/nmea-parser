@@ -12,6 +12,8 @@ from nmea_parser import nmea_parser
 MIN_SNR=32
 
 pa = argparse.ArgumentParser(description="put a condition of GNSS.")
+pa.add_argument("-g", action="store_true", dest="show_geom",
+               help="enables to show the geometric parameters.")
 pa.add_argument("-c", action="store_true", dest="show_cond",
                help="enables to show the condition of satelliates.")
 pa.add_argument("-s", action="store_true", dest="stream_mode",
@@ -29,7 +31,7 @@ pa.add_argument("-d", action="store_true", dest="debug",
                help="enable debug mode.")
 opt = pa.parse_args()
 
-def print_stat(result):
+def print_cond(result):
     if result is None:
         return
     print("## {}".format(datetime.now()))
@@ -37,12 +39,42 @@ def print_stat(result):
     print("Satellites in tracking: {}".format(len(result["tracked"])))
     print("Satellites in good signal: {}".format(len(result["n_good"])))
 
+def print_geom(result):
+    print("## {}".format(datetime.now()))
+    print("  Statis: {}".format(result["status"]))
+    print("  Time(UTC): {}".format(result["date"]))
+    print("  Latitude: {}".format(result["latitude"]))
+    print("  Longitude: {}".format(result["longitude"]))
+    print("  Altitude: {}".format(result["altitude"]))
+    print("  Height of geoid: {}".format(result["height"]))
+    print("  Speed: {}".format(result["speed"]))
+    print("  Angle: {}".format(result["angle"]))
+    print("  Quality: {}".format(result["quality"]))
+    print("  Mode: {}".format(result["mode"]))
+    print("  Tracked: {}".format(result["n_tracked"]))
+    print("  PDOP: {}".format(result["pdop"]))
+    print("  HDOP: {}".format(result["hdop"]))
+    print("  VDOP: {}".format(result["vdop"]))
+
 def show_result(nmea):
     if opt.show_cond:
         result = nmea.eval(min_snr=opt.min_snr)
+        if result is None:
+            if opt.verbose:
+                print(nmea.strerror())
+            return
         if opt.debug:
-            print(json.dumps(result,indent=4))
-        print_stat(result)
+            print("## cond:\n", json.dumps(result,indent=4))
+        print_cond(result)
+    elif opt.show_geom:
+        result = nmea.get_geom()
+        if result is None:
+            if opt.verbose:
+                print(nmea.strerror())
+            return
+        if opt.debug:
+            print("## geom:\n", json.dumps(result,indent=4))
+        print_geom(result)
     else:
         print(json.dumps(nmea.get(),indent=4))
 
