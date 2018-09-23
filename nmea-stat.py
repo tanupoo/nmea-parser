@@ -37,9 +37,9 @@ def print_cond(result):
     if result is None:
         return
     print("## {}".format(datetime.now()))
-    print("Satellites in view: {}".format(result["n_view"]))
-    print("Satellites in tracking: {}".format(len(result["tracked"])))
-    print("Satellites in good signal: {}".format(len(result["n_good"])))
+    print("  Satellites in view: {}".format(result["n_view"]))
+    print("  Satellites in tracking: {}".format(len(result["tracked"])))
+    print("  Satellites in good signal: {}".format(len(result["n_good"])))
 
 def print_geom(result):
     print("## {}".format(datetime.now()))
