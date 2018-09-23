@@ -135,6 +135,8 @@ class nmea_parser():
         t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("GSA",{})
         sv["sentence"] = msg
+        sv["selection_mode"] = item[1]
+        sv["mode"] = item[2]
         sv["pdop"] = item[15]
         sv["hdop"] = item[16]
         sv["vdop"] = item[17]
