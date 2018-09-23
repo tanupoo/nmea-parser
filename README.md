@@ -13,6 +13,10 @@ That's is why I make another parser here.
 
 You can see the NMEA data in JSON.
 
+    % nmea-stat.py -f nmea.txt
+
+or
+
     % cat nmea.txt | nmea-stat.py
 
 You can see the condition of the satellites in the device's sight.
