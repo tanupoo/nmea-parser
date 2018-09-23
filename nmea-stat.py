@@ -112,8 +112,7 @@ def main_loop(fd):
 main
 '''
 if opt.input_file == "-":
-    fd = sys.stdin
-    main_loop(fd)
+    main_loop(sys.stdin)
 else:
     with open(opt.input_file) as fd:
         main_loop(fd)
