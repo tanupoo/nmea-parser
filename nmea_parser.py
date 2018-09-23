@@ -99,7 +99,7 @@ class nmea_parser():
                 self.__error_msg = "not enough items."
                 return False
         else:
-            self._error_msg = "unknown NMEA message."
+            self.__error_msg = "unknown NMEA message."
             return False
         #
         return True
