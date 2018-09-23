@@ -52,11 +52,9 @@ class nmea_parser():
         if line[0] != "$":
             self.__error_msg = "not NMEA data"
             return False
-        '''
         if verify_cksum(line) == False:
             self.__error_msg = "check sum error"
             return False
-        '''
         f = self.__func.get(line[3:6])
         if f:
             if f(line) == False:
@@ -98,6 +96,9 @@ class nmea_parser():
 
     def parse_GSV(self, msg):
         '''
+        even if some items are missed in the line,
+        when the check sum of the line is correct,
+        it should not be an error.
         e.g.
         $GPGSV,2,1,08,01,40,083,46,02,17,308,41,12,07,344,39,14,22,228,45*75
         '''
@@ -105,7 +106,7 @@ class nmea_parser():
         v = []
         for i in range(4,len(item)):
             if i%4 == 0:
-                s = {"prn":item[i]}
+                s = {"prn":item[i], "elevation":0, "azimuth":0, "snr":0}
                 v.append(s)
             elif i%4 == 1:
                 s["elevation"] = item[i]
@@ -113,15 +114,17 @@ class nmea_parser():
                 s["azimuth"] = item[i]
             elif i%4 == 3:
                 s["snr"] = item[i]
-        # even if some items are missed in the line,
-        # when the check sum of the line is correct,
-        # it should not be an error
         t = self.talkers.setdefault(talker_id,{})
         sv = t.setdefault("GSV", { "n_talkers":item[3],
                                   "sentences":['']*int(item[1]),
-                                  "talkers":[] })
+                                  "talkers":{} })
         sv["sentences"][int(item[2])-1] = msg
-        sv["talkers"].extend(v)
+        for i in v:
+            if sv["talkers"].get(i["prn"]):
+                print("WARNING: {} exists already in GSV.".format(i["prn"]))
+                return False
+            sv["talkers"][i["prn"]] = i
+            sv["talkers"][i["prn"]].pop("prn")
 
     def parse_GSA(self, msg):
         '''
@@ -135,8 +138,10 @@ class nmea_parser():
         sv["pdop"] = item[15]
         sv["hdop"] = item[16]
         sv["vdop"] = item[17]
-        tracked = sv.setdefault("tracked",[])
-        tracked.extend(item[3:15])
+        tracked = sv.setdefault("tracked",{})
+        for i in item[3:15]:
+            if i:
+                tracked.setdefault(i, True)
 
     def parse_GGA(self, msg):
         '''
@@ -221,50 +226,47 @@ class nmea_parser():
         '''
         evaluation the input.
         '''
-        gn = self.talkers.get("GN")
-        if not gn:
-            return None
-        gsa = gn.get("GSA")
-        if not gsa:
-            return None
-        gp = self.talkers.get("GP")
-        if not gp:
-            return None
-        gsv = gp.get("GSV")
-        if not gsv:
-            return None
-        talkers = gsv.get("talkers")
-        if not talkers:
-            return None
-        #
-        tracked = self.condition.setdefault("tracked",[])
-        v = []
-        for i in gsa.get("tracked"):
-            if not i:
-                continue
-            tracked.append(i)
-            for j in talkers:
-                if i == j.get("prn"):
-                    if min_snr is not None:
-                        snr = j.get("snr")
-                        if not snr:
-                            snr = 0
-                        else:
-                            snr = int(snr)
-                        if snr <= min_snr:
-                            continue
-                    #
-                    v.append(j)
-        self.condition["n_good"] = v
-        # find GSV and n_talkers.
+        # collect the talkers from each GSV.
+        # and get the number of talkers from n_talkers.
+        talkers = {}
         n_view = 0
         for i in self.talkers.keys():
             gsv = self.talkers[i].get("GSV")
             if gsv:
+                talkers.update(gsv["talkers"])
                 n = gsv.get("n_talkers")
                 if n:
                     n_view += int(n)
         self.condition["n_view"] = n_view
+        # find a GSA
+        gsa = None
+        for i in ["GN", "GP"]:
+            gx = self.talkers.get(i)
+            if gx is None:
+                continue
+            gsa = gx.get("GSA")
+            if gsa:
+                break
+        if gsa is None or gsa.get("tracked") is None:
+            return None
+        tracked = self.condition.setdefault("tracked",[])
+        n_good = []
+        for i in gsa.get("tracked").keys():
+            tracked.append(i)
+            for j, k in talkers.items():
+                if i != j:
+                    continue
+                if min_snr is not None:
+                    snr = k.get("snr")
+                    if not snr:
+                        snr = 0
+                    else:
+                        snr = int(snr)
+                    if snr <= min_snr:
+                        continue
+                #
+                n_good.append(j)
+        self.condition["n_good"] = n_good
         #
         return self.condition
 
