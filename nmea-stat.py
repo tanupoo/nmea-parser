@@ -9,6 +9,8 @@ from datetime import datetime
 import json
 from nmea_parser import nmea_parser
 
+MIN_SNR=32
+
 pa = argparse.ArgumentParser(description="put a condition of GNSS.")
 pa.add_argument("-c", action="store_true", dest="show_cond",
                help="enables to show the condition of satelliates.")
@@ -16,7 +18,7 @@ pa.add_argument("-s", action="store_true", dest="stream_mode",
                help="enables to show a statistics periodically. see -b option.")
 pa.add_argument("-b", action="store", dest="break_word", default="GGA",
                help="specify a word to break the stream input.")
-pa.add_argument("--minimum-snr", action="store", dest="min_snr", default=32,
+pa.add_argument("--min-snr", action="store", dest="min_snr", default=MIN_SNR,
                 type=int,
                 help="specify the minimum SNR for an external application.")
 pa.add_argument("-v", action="store_true", dest="verbose",
@@ -35,7 +37,7 @@ def print_stat(result):
 
 def show_result():
     if opt.show_cond:
-        result = nmea.eval(min_snr=32)
+        result = nmea.eval(min_snr=opt.min_snr)
         if opt.debug:
             print(json.dumps(result,indent=4))
         print_stat(result)
@@ -53,7 +55,6 @@ if opt.stream_mode:
     for line in sys.stdin:
         line_no += 1
         if line[3:6] == opt.break_word:
-            #print_stat(nmea.eval(min_snr=opt.min_snr))
             show_result()
             nmea.init()
         if nmea.append(line) == False:
@@ -72,6 +73,5 @@ for line in data.split("\n"):
     if nmea.append(line) == False:
         if opt.verbose:
             print("line {}: {}".format(line_no, nmea.strerror()))
-
 # show result.
 show_result()
