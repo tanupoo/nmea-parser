@@ -81,7 +81,7 @@ def show_result(nmea):
         print(json.dumps(nmea.get(),indent=4))
 
 def main_loop(fd):
-    nmea = nmea_parser(pedantic=not opt.ignore_cksum)
+    nmea = nmea_parser(ignore_cksum=opt.ignore_cksum)
 
     line_no = 0
 

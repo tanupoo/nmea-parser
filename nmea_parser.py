@@ -53,8 +53,8 @@ def get_str_mode(v):
 
 class nmea_parser():
 
-    def __init__(self, pedantic=True):
-        self.pedantic = pedantic
+    def __init__(self, ignore_cksum=False):
+        self.ignore_cksum = ignore_cksum
         self.init()
         self.__func = {
             "RMC": self.parse_RMC,
@@ -89,7 +89,7 @@ class nmea_parser():
         if line[0] != "$":
             self.__error_msg = "not NMEA data"
             return False
-        if self.pedantic:
+        if not self.ignore_cksum:
             if verify_cksum(line) == False:
                 self.__error_msg = "check sum error"
                 return False
