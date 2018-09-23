@@ -18,6 +18,8 @@ pa.add_argument("-s", action="store_true", dest="stream_mode",
                help="enables to show a statistics periodically. see -b option.")
 pa.add_argument("-b", action="store", dest="break_word", default="GGA",
                help="specify a word to break the stream input.")
+pa.add_argument("-f", action="store", dest="input_file", default="-",
+               help="specify the file name of NMEA messages.")
 pa.add_argument("--min-snr", action="store", dest="min_snr", default=MIN_SNR,
                 type=int,
                 help="specify the minimum SNR for an external application.")
@@ -35,7 +37,7 @@ def print_stat(result):
     print("Satellites in tracking: {}".format(len(result["tracked"])))
     print("Satellites in good signal: {}".format(len(result["n_good"])))
 
-def show_result():
+def show_result(nmea):
     if opt.show_cond:
         result = nmea.eval(min_snr=opt.min_snr)
         if opt.debug:
@@ -44,34 +46,41 @@ def show_result():
     else:
         print(json.dumps(nmea.get(),indent=4))
 
+def main_loop(fd):
+    nmea = nmea_parser()
+
+    line_no = 0
+
+    if opt.stream_mode:
+        # stream mode
+        for line in fd:
+            line_no += 1
+            if line[3:6] == opt.break_word:
+                show_result(nmea)
+                nmea.init()
+            if nmea.append(line) == False:
+                if opt.verbose:
+                    print("line {}: {}".format(line_no, nmea.strerror()))
+        # it doesn't reach here.
+    else:
+        # non stream mode
+        data = fd.read()
+
+        for line in data.split("\n"):
+            line_no += 1
+            if nmea.append(line) == False:
+                if opt.verbose:
+                    print("line {}: {}".format(line_no, nmea.strerror()))
+        # show result.
+        show_result(nmea)
+
 '''
 main
 '''
-nmea = nmea_parser()
+if opt.input_file == "-":
+    fd = sys.stdin
+    main_loop(fd)
+else:
+    with open(opt.input_file) as fd:
+        main_loop(fd)
 
-line_no = 0
-
-if opt.stream_mode:
-    for line in sys.stdin:
-        line_no += 1
-        if line[3:6] == opt.break_word:
-            show_result()
-            nmea.init()
-        if nmea.append(line) == False:
-            if opt.verbose:
-                print("line {}: {}".format(line_no, nmea.strerror()))
-    # it doesn't reach here.
-    exit(0)
-
-#
-# non stream_mode
-#
-data = sys.stdin.read()
-
-for line in data.split("\n"):
-    line_no += 1
-    if nmea.append(line) == False:
-        if opt.verbose:
-            print("line {}: {}".format(line_no, nmea.strerror()))
-# show result.
-show_result()
