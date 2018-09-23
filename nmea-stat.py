@@ -35,13 +35,16 @@ main
 '''
 nmea = nmea_parser()
 
+line_no = 0
+
 if opt.break_mode:
     for line in sys.stdin:
+        line_no += 1
         if line[3:6] == opt.break_word:
             print_stat(nmea.eval(min_snr=opt.min_snr))
             nmea.init()
         if nmea.append(line) == False:
-            if opt.debug or opt.verbose:
+            if opt.verbose:
                 print("line {}: {}".format(line_no, nmea.strerror()))
     # it doesn't reach here.
     exit(0)
@@ -51,7 +54,6 @@ if opt.break_mode:
 #
 data = sys.stdin.read()
 
-line_no = 0
 for line in data.split("\n"):
     line_no += 1
     if nmea.append(line) == False:
