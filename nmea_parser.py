@@ -116,7 +116,7 @@ class nmea_parser():
             sign = 1
         return sign * float(src[:i]) + round(float(src[i:])/60,7)
 
-    def get_items(self, msg, nitems=0):
+    def get_items(self, msg, nitems=0, required=[]):
         '''
         msg
             "   $GPGSV,2,1,,,22,45*75   "
@@ -130,6 +130,9 @@ class nmea_parser():
         talker_id = item[0][:2]
         if nitems and len(item) < nitems:
             item.append([""]*(nitems-len(item)))
+        for i in required:
+            if item[i] == "":
+                return talker_id, i
         return talker_id, item
 
     def get_key(self, name):
@@ -201,7 +204,11 @@ class nmea_parser():
         e.g.
         $GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47
         '''
-        talker_id, item = self.get_items(msg, nitems=15)
+        talker_id, item = self.get_items(msg, nitems=15,
+                                         required=[2,3,4,5,9,10,11,12])
+        if isinstance(item, int):
+            print(f"ERROR: GGA item {item} is empty: {msg}")
+            return False
         t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("GGA", {})
         sv["sentence"] = msg
@@ -222,7 +229,11 @@ class nmea_parser():
         e.g.
         $GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A
         '''
-        talker_id, item = self.get_items(msg)
+        talker_id, item = self.get_items(msg,
+                                         required=[3,4,5,6,7])
+        if isinstance(item, int):
+            print(f"ERROR: RMC item {item} is empty: {msg}")
+            return False
         t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("RMC", {})
         sv["sentence"] = msg
@@ -241,7 +252,11 @@ class nmea_parser():
         e.g.
         $GPGLL,4916.45,N,12311.12,W,225444,A,*1D
         '''
-        talker_id, item = self.get_items(msg)
+        talker_id, item = self.get_items(msg,
+                                         required=[1,2,3,4])
+        if isinstance(item, int):
+            print(f"ERROR: GLL item {item} is empty: {msg}")
+            return False
         t = self.nmea_obj.setdefault(talker_id,{})
         sv = t.setdefault("GLL", {})
         sv["sentence"] = msg
