@@ -178,7 +178,13 @@ class nmea_parser():
         sv = t.setdefault("GSV", { "n_talkers":item[3],
                                   "sentences":['']*int(item[1]),
                                   "talkers":{} })
-        sv["sentences"][int(item[2])-1] = msg
+        try:
+            sv["sentences"][int(item[2])-1] = msg
+        except IndexError:
+            a = len(sv["sentences"])
+            b = int(item[2])-1
+            self.__error_msg = f"sentences was too short {a} for {b}"
+            return False
         for i in v:
             if sv["talkers"].get(i["prn"]):
                 self.__error_msg = "{} exists already in GSV.".format(i["prn"])
