@@ -6,7 +6,15 @@ def verify_cksum(src):
     if len(src.split("*")) == 1:
         # there is no "*".  avoiding to through raise by index("*")
         return False
-    base, cksum = src[1:].split("*")
+    try:
+        # 
+        base, cksum = src[1:].split("*")
+    except ValueError as e:
+        if "too many values to unpack" in str(e):
+            print("ERROR: ignore invalid line, more than one * exist.")
+            return False
+        else:
+            raise
     if len(cksum) == 0:
         return False
     res = 0
